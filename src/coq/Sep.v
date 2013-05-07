@@ -80,7 +80,7 @@ Ltac simpl_conc t := search_conc ltac:(match goal with [|- _ ==> _ * _] => eappl
 Ltac simpl_cancel t := search_prem ltac:(search_conc ltac:(
   match goal with [|- _ * _ ==> _ * _] => apply himp_split end; [ t | ])).
 
-Ltac finisher := apply himp_refl.
+Ltac finisher := apply himp_refl with (h := empty).
 (*  || apply himp_any_conc. *)
 
 Ltac premer := idtac;
@@ -167,7 +167,7 @@ Ltac unpack_conc := repeat search_conc ltac:(idtac;
     | [ |- _ ==> hprop_unpack ?M _ * _ ] =>
       match M with
         | M => eapply himp_unpack_conc; [eassumption || reflexivity | ]
-        | _ => match M with 
+        | _ => match M with
                  | M => fail 2
                  | _ => eapply himp_unpack_conc_meta
                end
@@ -201,17 +201,17 @@ Ltac canceler :=
     end);
   repeat search_prem ltac:(idtac;
     apply himp_empty_prem || (** Eliminate empty heaps on LHS **)
-    search_conc ltac:(idtac; 
+    search_conc ltac:(idtac;
       (** Eliminate common heaps. The match prevents capturing existentials **)
       match goal with
         | [ |- ?p * _ ==> ?p * _ ] => apply himp_frame
           (* beef this up to handle different fractions? *)
         | [ |- ?p -[ ?q ]-> _ * _ ==> ?p -[ ?q ]-> _ * _ ] => apply himp_frame_cell; trivial
-      end)). 
+      end)).
 
 Ltac specFinder stac :=
   inhabiter; try (stac; inhabiter);
-    
+
   try match goal with
         | [ |- ?P ==> Exists v :@ ?T, (hprop_unpack _ (fun _ => ?ptr -[ _ ]-> v * ?Q v))%hprop ] =>
           match findContents ptr P with
@@ -514,7 +514,7 @@ Ltac sep_change2 F :=
       end
   end.
 
-Lemma himp_prop_imp : forall (P Q : Prop) H, 
+Lemma himp_prop_imp : forall (P Q : Prop) H,
   (P -> Q)
   -> H * [P] ==> H * [Q].
   sep fail auto.
@@ -525,16 +525,16 @@ Lemma himp_prop_conc : forall (P : Prop) H1 H2,
   sep fail auto.
 Qed.
 
-Theorem himp_disjoint' : forall  h (S T : Set) p (a1:S) (a2:T), 
+Theorem himp_disjoint' : forall  h (S T : Set) p (a1:S) (a2:T),
   (p -[0]-> a1 * p -[0]-> a2)%hprop h -> False.
-  intros; unfold hprop_imp; intros. 
-  repeat (destruct H). 
+  intros; unfold hprop_imp; intros.
+  repeat (destruct H).
   intuition. red in H2, H3. intuition.
   generalize (H p).
   rewrite H0, H2. intuition.
 Qed.
 
-Theorem himp_disjoint : forall (S T : Set) p1 p2 (a1:S) (a2:T), 
+Theorem himp_disjoint : forall (S T : Set) p1 p2 (a1:S) (a2:T),
   p1 -[0]-> a1 * p2 -[0]-> a2 ==> p1 -[0]-> a1 * p2 -[0]-> a2 * [p1 <> p2].
   intros. unfold hprop_imp. intros; repeat (destruct H). destruct H0.
   exists ((x * x0)%heap). exists empty. subst. sep fail auto.

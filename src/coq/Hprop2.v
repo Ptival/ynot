@@ -18,7 +18,7 @@
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
@@ -49,23 +49,23 @@ Proof. intros. red. intros. pose (H0 h H1). apply (H h p). Qed.
 Lemma split_sep(P:nat->hprop)(len i:nat)(H:i <= len)(start:nat) :
   ((iter_sep P start len) ==> (iter_sep P start i) * (iter_sep P (start + i) (len - i))).
 Proof. revert i H start.
-  induction len ; intros. 
+  induction len ; intros.
   assert (i = 0) ; [ omega | subst ; sep fail auto].
-  induction i ; simpl ; intros ; assert (start + 0 = start) ; try omega. 
+  induction i ; simpl ; intros ; assert (start + 0 = start) ; try omega.
   rewrite H0 ; sep fail auto.
-  assert (start + S i = ((S start) + i)) ; try omega ; 
+  assert (start + S i = ((S start) + i)) ; try omega ;
   rewrite H1 ; clear H0; sep fail ltac:(try subst; auto).
   replace (S (start + i)) with (S start + i) by omega.
   sep fail auto.
 Qed.
 
 (* join two adjacent separating conjunctions *)
-Lemma join_sep(P:nat->hprop)(len i:nat)(H:i <= len)(start:nat) : 
+Lemma join_sep(P:nat->hprop)(len i:nat)(H:i <= len)(start:nat) :
   (iter_sep P start i) * (iter_sep P (start + i) (len - i)) ==> iter_sep P start len.
 Proof. revert i H start.
-  induction len ; intros. 
+  induction len ; intros.
   assert (i = 0) ; [omega | sep fail auto].
-  induction i ; simpl ; intros ; assert (start + 0 = start) ; try omega. 
+  induction i ; simpl ; intros ; assert (start + 0 = start) ; try omega.
   rewrite H0 ; sep fail auto.
   assert (start + S i = ((S start) + i)) ; try omega ; rewrite H1 ; sep fail auto.
 (*  replace (S (start + i)) with (S start + i) by omega.
@@ -73,51 +73,51 @@ Proof. revert i H start.
 Qed.
 
 (* split out a particular index, leaving the front and rear *)
-Lemma split_index_sep(P:nat->hprop)(start len i:nat) : 
-  i < len -> 
-  (iter_sep P start len) ==> 
+Lemma split_index_sep(P:nat->hprop)(start len i:nat) :
+  i < len ->
+  (iter_sep P start len) ==>
   (iter_sep P start i) * (P (start + i)) * (iter_sep P (1 + start + i) (len - i - 1)).
 Proof.
   intros. assert (i <= len). omega. assert (1 <= len - i). omega.
-  eapply hprop_mp. apply (split_sep P H0 start). sep fail auto. 
+  eapply hprop_mp. apply (split_sep P H0 start). sep fail auto.
   eapply hprop_mp. apply (split_sep P H1 (start + i)).
-  assert (S (start + i) = start + i + 1). omega. rewrite H2. sep fail auto. 
+  assert (S (start + i) = start + i + 1). omega. rewrite H2. sep fail auto.
 Qed.
 
 (* opposite of above *)
-Lemma join_index_sep(P:nat->hprop)(start len i:nat) : 
-  i < len -> 
+Lemma join_index_sep(P:nat->hprop)(start len i:nat) :
+  i < len ->
   (iter_sep P start i) * (P (start + i)) * (iter_sep P (1 + start + i) (len - i - 1)) ==>
   (iter_sep P start len).
 Proof.
-  intros. eapply hprop_mp_conc. assert (i <= len). omega. 
+  intros. eapply hprop_mp_conc. assert (i <= len). omega.
   apply (join_sep P H0 start). sep fail auto. assert (1 <= len - i). omega.
   eapply hprop_mp_conc. apply (join_sep P H0 (start + i)).
-  assert (S (start + i) = start + i + 1). omega. rewrite H1. sep fail auto. 
+  assert (S (start + i) = start + i + 1). omega. rewrite H1. sep fail auto.
 Qed.
 
 (* simplify proof for iterating separating conjunction implication *)
-Lemma iter_imp(P1 P2:nat->hprop)(len start:nat) : 
-  (forall i, i >= start -> i < len + start -> P1 i ==> P2 i) -> 
+Lemma iter_imp(P1 P2:nat->hprop)(len start:nat) :
+  (forall i, i >= start -> i < len + start -> P1 i ==> P2 i) ->
   iter_sep P1 start len ==> iter_sep P2 start len.
-Proof. revert start. 
+Proof. revert start.
   induction len. sep fail auto. sep fail auto. eapply himp_split. apply H. auto. omega.
   apply (IHlen (S start)). intros. apply H. omega. omega.
 Qed.
 
-Lemma sp_index_hyp(P:nat->hprop)(Q R:hprop)(start len i:nat) : 
-  i < len -> 
-  iter_sep P start i * P (start + i) * iter_sep P (1 + start + i) (len - i - 1) * Q ==> R 
+Lemma sp_index_hyp(P:nat->hprop)(Q R:hprop)(start len i:nat) :
+  i < len ->
+  iter_sep P start i * P (start + i) * iter_sep P (1 + start + i) (len - i - 1) * Q ==> R
   ->
   iter_sep P start len * Q ==> R.
 Proof.
-  intros. eapply hprop_mp. eapply himp_split. apply (split_index_sep P start H). 
-  sep fail auto. auto. 
+  intros. eapply hprop_mp. eapply himp_split. apply (split_index_sep P start H).
+  sep fail auto. auto.
 Qed.
 
-Lemma sp_index_conc(P:nat->hprop)(Q R:hprop)(start len i:nat) : 
-  i < len -> 
-  R ==> iter_sep P start i * P (start + i) * iter_sep P (1 + start + i) (len - i - 1) * Q -> 
+Lemma sp_index_conc(P:nat->hprop)(Q R:hprop)(start len i:nat) :
+  i < len ->
+  R ==> iter_sep P start i * P (start + i) * iter_sep P (1 + start + i) (len - i - 1) * Q ->
   R ==> iter_sep P start len * Q.
 Proof.
   intros. eapply hprop_mp_conc. eapply himp_split. apply (join_index_sep P start H).
@@ -126,12 +126,12 @@ Qed.
 
 (* extra tactics *)
 
-Ltac split_index' := idtac; 
+Ltac split_index' := idtac;
   match goal with
-    | [ |- iter_sep ?P ?s ?len * ?Q ==> ?R ] => 
+    | [ |- iter_sep ?P ?s ?len * ?Q ==> ?R ] =>
       eapply (sp_index_hyp P)
-    | [ |- ?R ==> iter_sep ?P ?s ?len * ?Q] => 
-      eapply (sp_index_conc P) 
+    | [ |- ?R ==> iter_sep ?P ?s ?len * ?Q] =>
+      eapply (sp_index_conc P)
   end.
 
 Ltac split_index := search_prem split_index' || search_conc split_index'.
